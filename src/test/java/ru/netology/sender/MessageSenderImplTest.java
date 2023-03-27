@@ -15,20 +15,16 @@ import ru.netology.i18n.LocalizationServiceImpl;
 import java.util.HashMap;
 import java.util.Map;
 
+
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.anyString;
+
 
 class MessageSenderImplTest {
 
     MessageSender messageSender;
-   LocalizationService localizationService = Mockito.mock(LocalizationServiceImpl.class);
-   GeoService geoService = Mockito.mock(GeoService.class);
-
-//LocalizationService localizationService = new LocalizationServiceImpl();
-//GeoService geoService = new GeoServiceImpl();
-
-
-    ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
+      LocalizationService localizationService = new LocalizationServiceImpl();
+    GeoService geoService = new GeoServiceImpl();
 
     @BeforeEach
     void setUp() {
@@ -36,25 +32,35 @@ class MessageSenderImplTest {
     }
 
     @Test
-    void send() {
-      /*  Mockito.when(MessageSenderImpl.IP_ADDRESS_HEADER).thenReturn("172.123.12.19");
-        String result = localizationService.locale(Country.RUSSIA);
-        Assertions.assertEquals(result,);
-        *//*Map<String, String> headers = new HashMap<String, String>();
-        headers.put();*/
-    }
-
-    @Test
     void sendLanguageRussian() {
-        /*Map<String, String> headers = new HashMap<>();
-        headers.put(MessageSenderImpl.IP_ADDRESS_HEADER, "172.123.12.19");*/
-       /* Mockito.when(geoService.byIp(anyString()))
-                .thenReturn (new Location("Moscow", Country.RUSSIA, null, 0));*/
+
         String expected = localizationService.locale(geoService.byIp("172.123.12.19").getCountry());
-
         String result = localizationService.locale(Country.RUSSIA);
-
         Assertions.assertEquals(expected, result);
     }
 
+    @Test
+    void sendLanguageNotRussian() {
+        String expected = localizationService.locale(geoService.byIp("96.123.12.19").getCountry());
+        String result = localizationService.locale(Country.USA);
+        Assertions.assertEquals(expected, result);
+    }
+
+    @Test
+    void sendLanguageMockito() {
+        String ip = "96.15.145.45";
+        LocalizationService localizationService = new LocalizationServiceImpl();
+        GeoService geoService = Mockito.spy(GeoServiceImpl.class);
+        messageSender = new MessageSenderImpl(geoService, localizationService);
+
+        String result = localizationService.locale(geoService.byIp(ip).getCountry());
+        Mockito.when(geoService.byIp(anyString()))
+                .thenReturn(new Location("Moscow", Country.RUSSIA, null, 0));
+
+        String expected = localizationService.locale(geoService.byIp(anyString()).getCountry());
+        Mockito.verify(geoService, Mockito.times(2)).byIp(anyString());
+        Assertions.assertNotEquals(result, expected);
+    }
+
 }
+
